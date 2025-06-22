@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VBT Estimated 1RM Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      color: #141414;
+    }
+
+    .vbt-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      overflow: hidden;
+    }
+
+    .vbt-left, .vbt-right {
+      flex: 1 1 50%;
+      box-sizing: border-box;
+      padding: 30px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #EF5607;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #CACACA;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #31D2DC;
+      color: #141414;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2cbec8;
+    }
+
+    .vbt-result-wrapper {
+      background: #F9FAFB;
+      border-left: 6px solid #EF5607;
+      border-radius: 12px;
+      padding: 40px 30px;
+      font-size: 16px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .divider {
+      height: 1px;
+      background: #CACACA;
+      margin: 40px 0 20px 0;
+      width: 100%;
+    }
+
+    .e1rm-result, .regression-result {
+      font-size: 40px;
+      color: #EF5607;
+      font-weight: 700;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #EF5607;
+      color: white;
+    }
+
+    tr:hover {background-color: #f5f5f5;}
+
+    canvas {
+      max-width: 100%;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 800px) {
+      .vbt-left, .vbt-right {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="vbt-container">
+    <!-- Left Input Area -->
+    <div class="vbt-left">
+      <h1>VBT Estimated 1RM</h1>
+      <p>Enter data in this format: <strong>Load_1 , Velo_1 ; Load_2 , Velo_2 ; Load_3 , Velo_3</strong></p>
+      <p>A minimum of 3 sets is needed. Example: <strong>45,1.18;95,1.03;135,0.85</strong></p>
+
+      <input type="text" id="dataInput" placeholder="Enter points as x,y; x,y; x,y">
+      <button onclick="updatePlot()">Update Plot</button>
+
+      <div class="divider"></div>
+
+      <table>
+        <tr>
+          <th>Select</th>
+          <th>Intermediate</th>
+          <th>Advanced</th>
+        </tr>
+        <tr>
+          <td>Bench Press</td>
+          <td>0.25</td>
+          <td>0.12</td>
+        </tr>
+        <tr>
+          <td>Back Squat</td>
+          <td>0.35</td>
+          <td>0.25</td>
+        </tr>
+        <tr>
+          <td>Conventional DL</td>
+          <td>0.2</td>
+          <td>0.1</td>
+        </tr>
+        <tr>
+          <td>Hex Bar DL</td>
+          <td>0.45</td>
+          <td>0.3</td>
+        </tr>
+        <tr>
+          <td>BBRow</td>
+          <td>0.5</td>
+          <td>0.4</td>
+        </tr>
+      </table>
+
+      <input type="text" id="yInput" placeholder="Enter target velocity">
+      <button onclick="solveForX()">Calculate e1RM</button>
+    </div>
+
+    <!-- Right Chart Area -->
+    <div class="vbt-right">
+      <div class="vbt-result-wrapper">
+        <div>Equation of the line:</div>
+        <div class="regression-result" id="slopeInterceptDisplay">--</div>
+        <div style="margin-top: 20px;">Pearson correlation coefficient (r):</div>
+        <div class="regression-result" id="correlationDisplay">--</div>
+        <canvas id="myChart"></canvas>
+        <div class="divider"></div>
+        <div>Your estimated 1-rep max (e1RM) at the selected velocity is:</div>
+        <div class="e1rm-result" id="resultDisplay">--</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let globalSlope = 0;
+    let globalIntercept = 0;
+
+    function linearRegression(data) {
+      let n = data.length;
+      let sum_x = 0, sum_y = 0, sum_xy = 0, sum_xx = 0;
+      for (let i = 0; i < n; i++) {
+        sum_x += data[i].x;
+        sum_y += data[i].y;
+        sum_xy += data[i].x * data[i].y;
+        sum_xx += data[i].x * data[i].x;
+      }
+      let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+      let intercept = (sum_y - slope * sum_x) / n;
+      return { slope, intercept };
+    }
+
+    function parseData(input) {
+      return input.split(';').map(pair => {
+        let [x, y] = pair.split(',').map(Number);
+        return { x, y };
+      });
+    }
+
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'User Data',
+            data: [],
+            backgroundColor: 'rgba(0, 119, 204, 0.3)',
+            borderColor: 'rgba(0, 119, 204, 1)',
+            showLine: false,
+            pointRadius: 5
+          },
+          {
+            label: 'Regression Line',
+            data: [],
+            type: 'line',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false
+          }
+        ]
+      },
+      options: {
+        scales: {
+          x: {
+            type: 'linear',
+            position: 'bottom'
+          }
+        }
+      }
+    });
+
+    function updatePlot() {
+      const rawData = document.getElementById('dataInput').value;
+      const dataPoints = parseData(rawData);
+      if (dataPoints.length < 3) {
+        alert("Please enter at least 3 data points.");
+        return;
+      }
+
+      const regressionParams = linearRegression(dataPoints);
+      myChart.data.datasets[0].data = dataPoints;
+
+      const xValues = dataPoints.map(pt => pt.x);
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      const regLinePoints = [
+        { x: minX, y: minX * regressionParams.slope + regressionParams.intercept },
+        { x: maxX, y: maxX * regressionParams.slope + regressionParams.intercept }
+      ];
+      myChart.data.datasets[1].data = regLinePoints;
+
+      globalSlope = regressionParams.slope;
+      globalIntercept = regressionParams.intercept;
+      const pearsonCorrelation = calculatePearsonCorrelation(dataPoints);
+
+      myChart.update();
+
+      document.getElementById('slopeInterceptDisplay').innerText = `y = ${globalSlope.toFixed(2)}x + ${globalIntercept.toFixed(2)}`;
+      document.getElementById('correlationDisplay').innerText = `${pearsonCorrelation.toFixed(2)}`;
+    }
+
+    function solveForX() {
+      const yValue = parseFloat(document.getElementById('yInput').value);
+      if (isNaN(yValue)) {
+        alert("Please enter a valid number for y.");
+        return;
+      }
+      const xValue = (yValue - globalIntercept) / globalSlope;
+      document.getElementById('resultDisplay').innerText = `${xValue.toFixed(2)} lbs`;
+    }
+
+    function calculatePearsonCorrelation(data) {
+      let n = data.length;
+      let sum_x = 0, sum_y = 0, sum_xy = 0, sum_xx = 0, sum_yy = 0;
+
+      for (let i = 0; i < n; i++) {
+        sum_x += data[i].x;
+        sum_y += data[i].y;
+        sum_xy += data[i].x * data[i].y;
+        sum_xx += data[i].x * data[i].x;
+        sum_yy += data[i].y * data[i].y;
+      }
+
+      let numerator = n * sum_xy - sum_x * sum_y;
+      let denominator = Math.sqrt((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y));
+      if (denominator === 0) return 0;
+      return numerator / denominator;
+    }
+  </script>
+</body>
+</html>
