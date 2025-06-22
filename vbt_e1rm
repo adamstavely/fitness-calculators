@@ -190,6 +190,7 @@
         <div class="divider"></div>
         <div>Your estimated 1-rep max (e1RM) at the selected velocity is:</div>
         <div class="e1rm-result" id="resultDisplay">--</div>
+<img src="https://images.squarespace-cdn.com/content/66885dec8cc48e0a2e991925/ce7abb13-d9cf-4ac9-aceb-0dcaabb15236/ChatGPT+Image+Jun+22%2C+2025%2C+04_36_01+PM.png?content-type=image%2Fpng" alt="Barbell Icon" style="max-width: 120px; margin-top: 24px;">
       </div>
     </div>
   </div>
