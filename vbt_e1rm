@@ -101,6 +101,10 @@
       padding: 10px;
       text-align: center;
     }
+    td:first-child {
+    text-align: left;
+    padding-left: 16px;
+    }
 
     th {
       background-color: #EF5607;
@@ -158,17 +162,17 @@
           <td>0.25</td>
         </tr>
         <tr>
-          <td>Conventional DL</td>
+          <td>Conventional Deadlift</td>
           <td>0.2</td>
           <td>0.1</td>
         </tr>
         <tr>
-          <td>Hex Bar DL</td>
+          <td>Hex Bar DeadLlift</td>
           <td>0.45</td>
           <td>0.3</td>
         </tr>
         <tr>
-          <td>BBRow</td>
+          <td>BarBell Row</td>
           <td>0.5</td>
           <td>0.4</td>
         </tr>
@@ -189,6 +193,7 @@
         <div class="divider"></div>
         <div>Your estimated 1-rep max (e1RM) at the selected velocity is:</div>
         <div class="e1rm-result" id="resultDisplay">--</div>
+       <img src="https://yourdomain.squarespace.com/s/path-to-your-image/barbell-icon.svg" alt="Barbell Icon" style="max-width: 120px; margin-top: 24px;">
       </div>
     </div>
   </div>
