@@ -45,6 +45,7 @@
       border: 1px solid #CACACA;
       border-radius: 10px;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
     button {
@@ -101,10 +102,6 @@
       padding: 10px;
       text-align: center;
     }
-    td:first-child {
-    text-align: left;
-    padding-left: 16px;
-    }
 
     th {
       background-color: #EF5607;
@@ -152,27 +149,27 @@
           <th>Advanced</th>
         </tr>
         <tr>
-          <td>Bench Press</td>
+          <td style="text-align: left;">Bench Press</td>
           <td>0.25</td>
           <td>0.12</td>
         </tr>
         <tr>
-          <td>Back Squat</td>
+          <td style="text-align: left;">Back Squat</td>
           <td>0.35</td>
           <td>0.25</td>
         </tr>
         <tr>
-          <td>Conventional Deadlift</td>
+          <td style="text-align: left;">Conventional Deadlift</td>
           <td>0.2</td>
           <td>0.1</td>
         </tr>
         <tr>
-          <td>Hex Bar DeadLlift</td>
+          <td style="text-align: left;">Hex Bar Deadlift</td>
           <td>0.45</td>
           <td>0.3</td>
         </tr>
         <tr>
-          <td>BarBell Row</td>
+          <td style="text-align: left;">Barbell Row</td>
           <td>0.5</td>
           <td>0.4</td>
         </tr>
@@ -193,7 +190,6 @@
         <div class="divider"></div>
         <div>Your estimated 1-rep max (e1RM) at the selected velocity is:</div>
         <div class="e1rm-result" id="resultDisplay">--</div>
-       <img src="https://yourdomain.squarespace.com/s/path-to-your-image/barbell-icon.svg" alt="Barbell Icon" style="max-width: 120px; margin-top: 24px;">
       </div>
     </div>
   </div>
